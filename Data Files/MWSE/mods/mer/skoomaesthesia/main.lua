@@ -1,8 +1,6 @@
 require('mer.skoomaesthesia.mcm')
 local Util = require('mer.skoomaesthesia.util.Util')
 event.register("initialized", function()
-
-
         require('mer.skoomaesthesia.controllers.TripController')
         require('mer.skoomaesthesia.controllers.PipeController')
         require('mer.skoomaesthesia.controllers.AddictionController')
