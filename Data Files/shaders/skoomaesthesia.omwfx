@@ -1,0 +1,128 @@
+uniform_float intensity {
+	default = 0.0;
+	min = 0.0;
+	max = 1.0;
+	static = false;
+}
+
+uniform_float cycle {
+	default = 0.0;
+	min = 0.0;
+	max = 1.0;
+	static = false;
+}
+
+uniform_float radius {
+	default = 0.0;
+	min = 0.0;
+	max = 1.0;
+	static = false;
+}
+
+sampler_2d SamplerLUT {
+	source = "textures/x0_psychedelic.tga";
+	min_filter = linear;
+	mag_filter = linear;
+}
+
+fragment lut {
+	vec3 lerp(vec3 from, vec3 to, float t) {
+		return (1 - t) * from + t * to;
+	}
+
+	vec3 saturate(vec3 c) {
+		return clamp(c, vec3(0.0), vec3(1.0));
+	}
+
+	vec3 ClutFunc(vec3 colorIN, sampler2D LutSampler) {
+		vec3 color_offset = vec3(0.2, 0.4, 0.3);
+		colorIN += color_offset * cycle;
+		vec2 CLut_pSize = vec2(0.00390625, 0.0625); // 1 / vec2(256, 16);
+		vec3 CLut_UV;
+		float baseBlue = floor(colorIN.b);
+		CLut_UV.xy = (colorIN.rg + 0.5) * CLut_pSize;
+		CLut_UV.x += baseBlue * CLut_pSize.y;
+		CLut_UV.z = CLut_UV.x + CLut_pSize.y;
+		colorIN = saturate(colorIN) * 15.0;
+		return lerp(omw_Texture2D(LutSampler, fract(CLut_UV.xy)).rgb, omw_Texture2D(LutSampler, fract(CLut_UV.zy)).rgb, colorIN.b - baseBlue);
+	}
+
+	omw_In vec2 omw_TexCoord;
+
+	void main () {
+		vec4 scene = omw_GetLastShader(omw_TexCoord);
+		omw_FragColor.rgb = lerp(scene.rgb, ClutFunc(scene.rgb, SamplerLUT), intensity);
+	}
+}
+
+shared {
+	vec4 lerp(vec4 from, vec4 to, float t) {
+		return (1 - t) * from + t * to;
+	}
+
+	float saturate(float c) {
+		return clamp(c, 0.0, 1.0);
+	}
+
+	vec4 sample0(sampler2D s, vec2 t) {
+		return omw_Texture2D(s, t);
+	}
+
+	vec4 blur(float inner, vec2 TexD, float radius) {
+		vec2 p = TexD * (1.0 - TexD);
+		float vig = saturate(p.x * p.y * 15.0);
+		vig = smoothstep(0.70, 1.0, 1.0 - vig);
+		vig = radius * vig;
+		vec2 rcprcp = omw.rcpResolution * vig;
+
+		vec4 blr = vec4(0.0);
+		blr += 0.026109*sample0( omw_SamplerLastPass, (TexD+vec2(-15.5,0.0)*rcprcp) );
+		blr += 0.034202*sample0( omw_SamplerLastPass, (TexD+vec2(-13.5,0.0)*rcprcp) );
+		blr += 0.043219*sample0( omw_SamplerLastPass, (TexD+vec2(-11.5,0.0)*rcprcp) );
+		blr += 0.052683*sample0( omw_SamplerLastPass, (TexD+vec2( -9.5,0.0)*rcprcp) );
+		blr += 0.061948*sample0( omw_SamplerLastPass, (TexD+vec2( -7.5,0.0)*rcprcp) );
+		blr += 0.070266*sample0( omw_SamplerLastPass, (TexD+vec2( -5.5,0.0)*rcprcp) );
+		blr += 0.076883*sample0( omw_SamplerLastPass, (TexD+vec2( -3.5,0.0)*rcprcp) );
+		blr += 0.081149*sample0( omw_SamplerLastPass, (TexD+vec2( -1.5,0.0)*rcprcp) );
+		blr += 0.041312*sample0( omw_SamplerLastPass, (TexD+vec2(  0.0,0.0)*rcprcp) );
+		blr += 0.081149*sample0( omw_SamplerLastPass, (TexD+vec2(  1.5,0.0)*rcprcp) );
+		blr += 0.076883*sample0( omw_SamplerLastPass, (TexD+vec2(  3.5,0.0)*rcprcp) );
+		blr += 0.070266*sample0( omw_SamplerLastPass, (TexD+vec2(  5.5,0.0)*rcprcp) );
+		blr += 0.061948*sample0( omw_SamplerLastPass, (TexD+vec2(  7.5,0.0)*rcprcp) );
+		blr += 0.052683*sample0( omw_SamplerLastPass, (TexD+vec2(  9.5,0.0)*rcprcp) );
+		blr += 0.043219*sample0( omw_SamplerLastPass, (TexD+vec2( 11.5,0.0)*rcprcp) );
+		blr += 0.034202*sample0( omw_SamplerLastPass, (TexD+vec2( 13.5,0.0)*rcprcp) );
+		blr += 0.026109*sample0( omw_SamplerLastPass, (TexD+vec2( 15.5,0.0)*rcprcp) );
+
+		blr /= 0.93423; // renormalize to compensate for the 4 taps I skipped
+
+		vec4 pcol = sample0(omw_SamplerLastPass, TexD);
+		vec4 col = lerp(blr, pcol, 1.0 - vig);
+		return vec4(col.rgb, 1.0);
+	}
+}
+
+fragment blurx() {
+	omw_In vec2 omw_TexCoord;
+
+	void main() {
+		omw_FragColor = blur(0.7, omw_TexCoord, radius);
+	}
+}
+
+fragment blury() {
+	omw_In vec2 omw_TexCoord;
+
+	void main() {
+		omw_FragColor = blur(0.5, omw_TexCoord, radius);
+	}
+}
+
+technique {
+	passes = lut, blurx, blury;
+	dynamic = true;
+	flags = hidden;
+	author = "Merlord";
+	description = "Port to omwfx by urm";
+	version = "1.0";
+}

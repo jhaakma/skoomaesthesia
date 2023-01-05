@@ -1,0 +1,6 @@
+pageName: Skoomaesthesia
+pageDescription: Adds new skooma mechanics including animated skooma pipe smoking, psychedelic shaders and sound effects, and skooma addiction.
+
+visualsGroupName: Visual Settings
+maxIntensity_name: Color shift power limit
+maxBlur_name: Blur power limit
