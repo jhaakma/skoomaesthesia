@@ -37,5 +37,36 @@ I.Settings.registerGroup {
                 min = 1,
             },
         },
+        {
+            key = 'baseChance',
+            name = 'baseChance_name',
+            description = 'baseChance_description',
+            renderer = 'number',
+            default = 1,
+            argument = {
+                min = 0,
+                max = 1,
+            },
+        },
+        {
+            key = 'minResistance',
+            name = 'minResistance_name',
+            description = 'minResistance_description',
+            renderer = 'number',
+            default = 1,
+            argument = {
+                min = 1,
+            },
+        },
+        {
+            key = 'maxResistance',
+            name = 'maxResistance_name',
+            description = 'maxResistance_description',
+            renderer = 'number',
+            default = 5,
+            argument = {
+                min = 1,
+            },
+        },
     }
 }

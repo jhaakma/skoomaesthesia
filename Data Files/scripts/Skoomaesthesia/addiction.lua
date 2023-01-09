@@ -2,34 +2,58 @@ local core = require('openmw.core')
 local self = require('openmw.self')
 local types = require('openmw.types')
 local storage = require('openmw.storage')
+local ui = require('openmw.ui')
 local time = require('openmw_aux.time')
 
 local settings = storage.globalSection('SettingsSkoomaesthesia_Addiction')
 
 local attributes = types.Actor.stats.attributes
+local l10n = core.l10n('Skoomaesthesia')
 
-local function applyWithdrawalChange(player, active)
-    local withdrawalIntensity = settings:get('withdrawalIntensity')
+local function applyWithdrawalChange(active)
+    local withdrawalChange = settings:get('withdrawalIntensity')
     if active then
-        withdrawalIntensity = - withdrawalIntensity
+        withdrawalChange = - withdrawalChange
     end
-    local intelligence = attributes.intelligence(player)
-    intelligence.modifier = intelligence.modifier + withdrawalIntensity
-    local agility = attributes.agility(player)
-    agility.modifier = agility.modifier + withdrawalIntensity
+    local intelligence = attributes.intelligence(self)
+    intelligence.modifier = intelligence.modifier + withdrawalChange
+    local agility = attributes.agility(self)
+    agility.modifier = agility.modifier + withdrawalChange
+end
+
+local function rescale(value, minIn, maxIn, minOut, maxOut)
+    local t = (value - minIn) / (maxIn - minIn)
+    t = math.min(1, math.max(0, t))
+    return minOut + t * (maxOut - minOut)
+end
+
+local function addictionTest()
+    local willpowerValue = attributes.willpower(self).modified
+    local resistChance = rescale(
+        willpowerValue,
+        0, 100,
+        settings:get('minResistance'), settings:get('maxResistance')
+    )
+    local addictionChance = settings:get('baseChance') / resistChance
+    return math.random() < addictionChance
 end
 
 local state = {
     lastDoseTime = nil,
     hasWithdrawal = false,
+    addicted = false,
 }
 
 local function dose()
     state.lastDoseTime = core.getGameTime()
+    if not state.addicted and addictionTest() then
+        state.addicted = true
+        ui.showMessage(l10n('message_addicted'))
+    end
 end
 
 local function update()
-    if not state.lastDoseTime then return end
+    if not state.lastDoseTime or not state.addicted then return end
     local now = core.getGameTime()
     local timeSinceDose = now - state.lastDoseTime
     local hoursSinceDose = timeSinceDose / time.hour
@@ -41,8 +65,16 @@ local function update()
         and hoursSinceDose < hoursToRecovery
 
     if state.hasWithdrawal ~= hasWithdrawal then
-        applyWithdrawalChange(self, hasWithdrawal)
+        applyWithdrawalChange(hasWithdrawal)
         state.hasWithdrawal = hasWithdrawal
+        if hasWithdrawal then
+            ui.showMessage(l10n('message_withdrawal'))
+        end
+    end
+
+    if hoursSinceDose > hoursToRecovery then
+        state.addicted = false
+        ui.showMessage(l10n('message_recovery'))
     end
 end
 
@@ -54,6 +86,7 @@ local function load(savedState)
     if not savedState then return end
     state.lastDoseTime = savedState.lastDoseTime
     state.hasWithdrawal = savedState.hasWithdrawal
+    state.addicted = savedState.addicted
 end
 
 return {
