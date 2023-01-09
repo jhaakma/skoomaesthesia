@@ -1,6 +1,8 @@
 local core = require('openmw.core')
 local postprocessing = require('openmw.postprocessing')
 
+local addiction = require('scripts.Skoomaesthesia.addiction')
+
 local settings = require('scripts.Skoomaesthesia.settings')
 local visualSettings = settings.visuals
 
@@ -59,6 +61,10 @@ return {
                 state.stage = STAGE.beginning
             end
             state.timestamp = core.getGameTime()
+            addiction.dose()
+        end,
+        onUpdate = function()
+            addiction.update()
         end,
         onFrame = function(_)
             if state.stage == STAGE.idle then return end
@@ -80,13 +86,19 @@ return {
             shader:setFloat('cycle', colorCycle)
         end,
         onSave = function()
-            return state
+            return {
+                visuals = state,
+                addiction = addiction.save()
+            }
         end,
         onLoad = function(savedState)
             if not savedState then return end
-            state.stage = savedState.stage
-            state.timestamp = savedState.timestamp
-            state.power = savedState.power
+            local visuals = savedState.visuals
+            state.stage = visuals.stage
+            state.timestamp = visuals.timestamp
+            state.power = visuals.power
+
+            addiction.load(savedState.addiction)
         end,
     }
 }

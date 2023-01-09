@@ -4,3 +4,11 @@ pageDescription: Adds new skooma mechanics including animated skooma pipe smokin
 visualsGroupName: Visual Settings
 maxIntensity_name: Color shift power limit
 maxBlur_name: Blur power limit
+
+addictionGroupName: Addiction Settings
+withdrawalIntensity_name: Withdrawal intensity
+withdrawalIntensity_description: The amount by which to reduce affected attributes
+hoursToWithdrawal_name: Hours until withdrawal
+hoursToWithdrawal_description: Time since the last dose at which withdrawal begins
+hoursToRecovery_name: Hours until recovery
+hoursToRecovery_description: Time since the last dose at which addiction stops
