@@ -19,6 +19,14 @@ local function endTrip()
         TripStateService.updateState('ending')
         ShaderService.turnOffShaderEffects()
         MusicService.stopCreepySounds()
+        timer.start{
+            type = timer.real,
+            duration = config.static.timeShift * config.static.onSetTime,
+            iterations = 1,
+            callback = function()
+                TripStateService.updateState(nil)
+            end,
+        }
     end
 end
 
@@ -93,8 +101,8 @@ event.register("loaded", handleTripOnLoad)
 --Time Effects
 local function getColorCycle()
     local moduloMinutes = (os.clock()*0.1)%2
-    moduloMinutes = (moduloMinutes < 1) 
-        and moduloMinutes 
+    moduloMinutes = (moduloMinutes < 1)
+        and moduloMinutes
         or (1 - (moduloMinutes-1))
     return moduloMinutes
 end
@@ -104,11 +112,7 @@ local function slowTime(e)
     if TripStateService.getState() ~= nil then
         tes3.worldController.deltaTime = tes3.worldController.deltaTime * config.static.timeShift
     end
-    mge.setShaderFloat{
-        shader=config.static.shaderName,
-        variable="cycle",
-        value= getColorCycle()
-    }
+    ShaderService.getShader().cycle = getColorCycle()
 end
 event.register("enterFrame", slowTime)
 
@@ -125,7 +129,7 @@ local function blockMusicChange(e)
     if (TripStateService.getState() ~= nil) and not TripStateService.isState('ending') then
         Util.log:debug("Changing music path to Skoomaesthesia")
         e.music = config.static.musicPath
-    end 
+    end
 end
 event.register("musicSelectTrack", blockMusicChange)
 

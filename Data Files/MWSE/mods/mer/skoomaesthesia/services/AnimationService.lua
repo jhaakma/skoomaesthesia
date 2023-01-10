@@ -92,7 +92,7 @@ local function playSmokingAnimation(meshPath, pipeObject, pipeRef)
         attachPipe(ref, pipeObject)
         setPipeCullState(pipeRefHandle, true)
     end
-    --Return the pipe        
+    --Return the pipe
     timer.start{
         duration = getDuration(3.5),
         callback = function()

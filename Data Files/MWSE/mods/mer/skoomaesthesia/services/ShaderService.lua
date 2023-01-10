@@ -10,7 +10,19 @@ local function getDuration(duration)
     return duration * multi
 end
 
+function ShaderService.getShader(shaderId)
+    shaderId = shaderId or config.static.shaderName
+    local shader = mge.shaders.find{ name = shaderId}
+    if not shader then
+        shader = mgeShadersConfig.load({ name = shaderId })
+    end
+    return shader
+end
+
 function ShaderService.turnOnShaderEffects()
+    local shader = ShaderService.getShader()
+    shader.enabled = true
+
     local DURATION = config.static.onSetTime / config.static.onsetIterations
     local ITERATIONS = config.static.onsetIterations
     local MAX_INTENSITY = config.mcm.maxColor/100
@@ -27,18 +39,11 @@ function ShaderService.turnOnShaderEffects()
         iterations = ITERATIONS,
         callback = function()
             if TripStateService.isState('beginning') or TripStateService.isState('active') then
+
                 intensity = math.clamp((intensity + INTENSITY_PER_TICK), 0, MAX_INTENSITY)
+                shader.intensity = intensity
                 blurRadius = math.clamp((blurRadius + BLUR_PER_TICK), 0, MAX_BLUR)
-                mge.setShaderFloat{
-                    shader=config.static.shaderName,
-                    variable="intensity",
-                    value= intensity
-                }
-                mge.setShaderFloat{
-                    shader=config.static.shaderName,
-                    variable="radius",
-                    value= blurRadius
-                }
+                shader.radius = blurRadius
                 Util.log:trace("ON: set intensity to %s", intensity)
             end
         end
@@ -55,7 +60,10 @@ function ShaderService.turnOnShaderEffects()
     }
 end
 
+
 function ShaderService.turnOffShaderEffects()
+    local shader = ShaderService.getShader()
+
     local DURATION = config.static.onSetTime / config.static.onsetIterations
     local ITERATIONS = config.static.onsetIterations
     local MAX_INTENSITY = config.mcm.maxColor/100
@@ -67,23 +75,15 @@ function ShaderService.turnOffShaderEffects()
     local intensity = MAX_INTENSITY
     local blurRadius = MAX_BLUR
     timer.start{
-        typer = timer.real,
+        type = timer.real,
         duration = getDuration(DURATION),
         iterations = ITERATIONS+1,--1 extra tick to avoid rounding errors
         callback = function()
             if TripStateService.isState('ending') then
                 intensity = math.clamp((intensity - INTENSITY_PER_TICK), 0, MAX_INTENSITY)
+                shader.intensity = intensity
                 blurRadius = math.clamp((blurRadius - BLUR_PER_TICK), 0, MAX_BLUR)
-                mge.setShaderFloat{
-                    shader=config.static.shaderName,
-                    variable="intensity",
-                    value = intensity
-                }
-                mge.setShaderFloat{
-                    shader=config.static.shaderName,
-                    variable="radius",
-                    value = blurRadius
-                }
+                shader.radius = blurRadius
                 Util.log:trace("OFF: set intensity to %s", intensity)
             end
         end
@@ -94,8 +94,7 @@ function ShaderService.turnOffShaderEffects()
         iterations = 1,
         callback = function()
             if TripStateService.isState('ending') then
-                TripStateService.updateState()
-                ShaderService.resetShader()
+                shader.enabled = false
             end
         end
     }
@@ -103,16 +102,10 @@ end
 
 function ShaderService.resetShader()
     Util.log:debug("reseting the shader")
-    mge.setShaderFloat{
-        shader= config.static.shaderName,
-        variable="intensity",
-        value = 0
-    }
-    mge.setShaderFloat{
-        shader= config.static.shaderName,
-        variable="radius",
-        value = 0
-    }
+    local shader = ShaderService.getShader()
+    shader.enabled = false
 end
+
+
 
 return ShaderService
