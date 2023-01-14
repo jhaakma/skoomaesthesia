@@ -1,5 +1,5 @@
+local common = require('mer.skoomaesthesia.common')
 local config = require('mer.skoomaesthesia.config')
-local Util = require('mer.skoomaesthesia.util.Util')
 local modName = config.static.modName
 local modDescription = config.static.modDescription
 local mcmConfig = mwse.loadConfig(config.configPath, config.mcmDefault)
@@ -64,7 +64,9 @@ local function registerModConfig()
         },
         variable = mwse.mcm.createTableVariable{ id = "logLevel", table = mcmConfig },
         callback = function(self)
-            Util.log:setLogLevel(self.variable.value)
+            for _, log in ipairs(common.loggers) do
+                log:setLogLevel(self.variable.value)
+            end
         end
     }
 end

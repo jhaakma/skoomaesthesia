@@ -2,9 +2,11 @@
     Keeps track of the state of the Skooma hallucination
 ]]
 
-local TripStateService = {}
+local common = require("mer.skoomaesthesia.common")
+local logger = common.createLogger("TripStateService")
 local config = require('mer.skoomaesthesia.config')
-local Util = require('mer.skoomaesthesia.util.Util')
+
+local TripStateService = {}
 local STATES = {
     beginning = "beginning",
     active = "active",
@@ -14,7 +16,7 @@ local STATES = {
 function TripStateService.updateState(newState)
     if not config.persistent then return end
     if (newState ~= nil) and not STATES[newState] then
-        Util.log:error("Tried to update to an invalid trip state")
+        logger:error("Tried to update to an invalid trip state")
         return
     end
     local oldState = config.persistent.tripState

@@ -1,8 +1,9 @@
-local ShaderService = {}
-local TripStateService = require('mer.skoomaesthesia.services.TripStateService')
 
+local common = require('mer.skoomaesthesia.common')
+local logger = common.createLogger("ShaderService")
 local config = require('mer.skoomaesthesia.config')
-local Util = require('mer.skoomaesthesia.util.Util')
+local TripStateService = require('mer.skoomaesthesia.services.TripStateService')
+local ShaderService = {}
 
 local function getDuration(duration)
     local tripping = TripStateService.getState()
@@ -30,26 +31,25 @@ function ShaderService.turnOnShaderEffects()
     local INTENSITY_PER_TICK = (MAX_INTENSITY / config.static.onsetIterations)
     local BLUR_PER_TICK = (MAX_BLUR / config.static.onsetIterations)
 
-    Util.log:debug("Turning Shader Effects On. Max Intensity: %s", MAX_INTENSITY)
+    logger:debug("Turning Shader Effects On. Max Intensity: %s", MAX_INTENSITY)
     local intensity = 0
     local blurRadius = 0
     timer.start{
-        typer = timer.real,
+        typer = timer.simulate,
         duration = getDuration(DURATION),
         iterations = ITERATIONS,
         callback = function()
             if TripStateService.isState('beginning') or TripStateService.isState('active') then
-
                 intensity = math.clamp((intensity + INTENSITY_PER_TICK), 0, MAX_INTENSITY)
                 shader.intensity = intensity
                 blurRadius = math.clamp((blurRadius + BLUR_PER_TICK), 0, MAX_BLUR)
                 shader.radius = blurRadius
-                Util.log:trace("ON: set intensity to %s", intensity)
+                logger:trace("ON: set intensity to %s", intensity)
             end
         end
     }
     timer.start{
-        type = timer.real,
+        type = timer.simulate,
         duration = getDuration(config.static.onSetTime),
         iterations = 1,
         callback = function()
@@ -71,11 +71,11 @@ function ShaderService.turnOffShaderEffects()
     local INTENSITY_PER_TICK = (MAX_INTENSITY / config.static.onsetIterations)
     local BLUR_PER_TICK = (MAX_BLUR / config.static.onsetIterations)
 
-    Util.log:debug("Turning Shader Effects Off")
+    logger:debug("Turning Shader Effects Off")
     local intensity = MAX_INTENSITY
     local blurRadius = MAX_BLUR
     timer.start{
-        type = timer.real,
+        type = timer.simulate,
         duration = getDuration(DURATION),
         iterations = ITERATIONS+1,--1 extra tick to avoid rounding errors
         callback = function()
@@ -84,12 +84,12 @@ function ShaderService.turnOffShaderEffects()
                 shader.intensity = intensity
                 blurRadius = math.clamp((blurRadius - BLUR_PER_TICK), 0, MAX_BLUR)
                 shader.radius = blurRadius
-                Util.log:trace("OFF: set intensity to %s", intensity)
+                logger:trace("OFF: set intensity to %s", intensity)
             end
         end
     }
     timer.start{
-        type = timer.real,
+        type = timer.simulate,
         duration = getDuration(DURATION*(ITERATIONS+1)+1),
         iterations = 1,
         callback = function()
@@ -101,7 +101,7 @@ function ShaderService.turnOffShaderEffects()
 end
 
 function ShaderService.resetShader()
-    Util.log:debug("reseting the shader")
+    logger:debug("reseting the shader")
     local shader = ShaderService.getShader()
     shader.enabled = false
 end

@@ -1,27 +1,28 @@
 
 local AddictionService = require('mer.skoomaesthesia.services.AddictionService')
+local common = require('mer.skoomaesthesia.common')
+local logger = common.createLogger("AddictionController")
 local config = require('mer.skoomaesthesia.config')
-local Util = require('mer.skoomaesthesia.util.Util')
 
 local function checkAddiction()
-    Util.log:trace("AddictionService: checkAddiction()")
+    logger:trace("AddictionService: checkAddiction()")
     if not AddictionService.getIsAddicted() then return end
     local lastSmoked = config.persistent.lastSmoked
     if not lastSmoked then return end
     local now = tes3.getSimulationTimestamp()
     local timeAddicted = now - lastSmoked
-    Util.log:trace("Last Smoked: %s", lastSmoked)
-    Util.log:trace("Now: %s", now)
-    Util.log:trace("time Addicted: %s", timeAddicted)
+    logger:trace("Last Smoked: %s", lastSmoked)
+    logger:trace("Now: %s", now)
+    logger:trace("time Addicted: %s", timeAddicted)
     if timeAddicted < config.static.hoursToWithdrawal then
-        Util.log:trace("checkAddiction() removing withdrawals")
+        logger:trace("checkAddiction() removing withdrawals")
         --smoked recently
         AddictionService.removeWithdrawals()
     elseif timeAddicted < config.static.hoursToRecovery then
-        Util.log:trace("checkAddiction() add withdrawals if needed")
+        logger:trace("checkAddiction() add withdrawals if needed")
         AddictionService.addWithdrawals()
     else
-        Util.log:trace("checkAddiction() recover")
+        logger:trace("checkAddiction() recover")
         AddictionService.recover()
     end
 end

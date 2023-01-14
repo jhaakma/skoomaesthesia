@@ -1,9 +1,11 @@
+local common = require('mer.skoomaesthesia.common')
+local logger = common.createLogger("TripController")
 local config = require('mer.skoomaesthesia.config')
-local Util = require('mer.skoomaesthesia.util.Util')
 local ShaderService = require('mer.skoomaesthesia.services.ShaderService')
 local MusicService = require('mer.skoomaesthesia.services.MusicService')
 local TripStateService = require('mer.skoomaesthesia.services.TripStateService')
 local AddictionService = require('mer.skoomaesthesia.services.AddictionService')
+local ItemService = require('mer.skoomaesthesia.services.ItemService')
 
 local function startTrip()
     if not TripStateService.isState('beginning') then
@@ -20,7 +22,7 @@ local function endTrip()
         ShaderService.turnOffShaderEffects()
         MusicService.stopCreepySounds()
         timer.start{
-            type = timer.real,
+            type = timer.simulate,
             duration = config.static.timeShift * config.static.onSetTime,
             iterations = 1,
             callback = function()
@@ -30,13 +32,14 @@ local function endTrip()
     end
 end
 
+---@param e spellTickEventData
 local function skoomaSpellTick(e)
     if e.target ~= tes3.player then return end
-    if e.source.name and e.source.name:lower() == "skooma" then
-        if e.effectInstance.state == tes3.spellState.beginning then
+    if e.effectInstance.state == tes3.spellState.beginning then
+        if ItemService.isSkooma(e.source) then
             if config.mcm.enableHallucinations then
                 if TripStateService.isState('ending') or TripStateService.getState() == nil then
-                    Util.log:debug("Drank Skooma, starting Trip")
+                    logger:debug("Drank Skooma, starting Trip")
                     startTrip()
                     if config.mcm.enableAddiction then
                         AddictionService.smoke()
@@ -52,18 +55,20 @@ event.register("spellTick", skoomaSpellTick)
 local function checkSkoomaExpired()
     if TripStateService.isState('ending') or not TripStateService.getState() then return end
     local skoomaActive = false
+    ---@diagnostic disable-next-line: undefined-field
     local activeEffect = tes3.mobilePlayer.activeMagicEffects
+    ---@diagnostic disable-next-line: undefined-field
     for _ = 1, tes3.mobilePlayer.activeMagicEffectCount+1 do
         local instance = activeEffect.instance
         if instance and instance.item and instance.item.name then
-            if instance.item.name:lower() == "skooma" then
+            if ItemService.isSkooma(instance.item) then
                 skoomaActive = true
             end
         end
         activeEffect = activeEffect.next
     end
     if not skoomaActive then
-        Util.log:debug("Skooma ran out, ending Trip")
+        logger:debug("Skooma ran out, ending Trip")
         endTrip()
     end
 end
@@ -75,14 +80,14 @@ local function handleTripOnLoad(e)
         type = timer.simulate,
         duration = 1,
         callback = function()
-            Util.log:debug("Checking trip on load")
+            logger:debug("Checking trip on load")
             local tripState = TripStateService.getState()
-            Util.log:debug("Tripstate: %s", tripState)
+            logger:debug("Tripstate: %s", tripState)
             if tripState == "ending" then
-                Util.log:debug("ending")
+                logger:debug("ending")
                 TripStateService.updateState(nil)
             elseif tripState and config.mcm.enableHallucinations then
-                Util.log:debug("Has a trip state, turning on shader effects")
+                logger:debug("Has a trip state, turning on shader effects")
                 MusicService.playCreepySounds()
                 ShaderService.turnOnShaderEffects()
             end
@@ -127,7 +132,7 @@ event.register("addSound", slowDownSoundEffects)
 
 local function blockMusicChange(e)
     if (TripStateService.getState() ~= nil) and not TripStateService.isState('ending') then
-        Util.log:debug("Changing music path to Skoomaesthesia")
+        logger:debug("Changing music path to Skoomaesthesia")
         e.music = config.static.musicPath
     end
 end

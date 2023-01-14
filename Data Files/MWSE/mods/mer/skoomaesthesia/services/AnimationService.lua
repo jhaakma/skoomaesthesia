@@ -1,5 +1,6 @@
 local AnimationService = {}
-local Util = require('mer.skoomaesthesia.util.Util')
+local common = require('mer.skoomaesthesia.common')
+local logger = common.createLogger("AnimationService")
 local config = require('mer.skoomaesthesia.config')
 local TripStateService = require('mer.skoomaesthesia.services.TripStateService')
 local meshRoot = 'skoomaesthesia'
@@ -17,21 +18,21 @@ end
 
 local function getMeshPath(meshType)
     local animPath = string.format('%s\\%s.nif', meshRoot, meshes[meshType])
-    Util.log:debug("getMeshPath: %s", animPath)
+    logger:debug("getMeshPath: %s", animPath)
     return animPath
 end
 
 local function getPipeMesh(pipeObject)
-    Util.log:debug("getPipeMesh")
+    logger:debug("getPipeMesh")
     local skoomaMeshPath = pipeObject.mesh
-    Util.log:debug("skoomaMeshPath: %s", skoomaMeshPath)
+    logger:debug("skoomaMeshPath: %s", skoomaMeshPath)
     local skoomaMesh = tes3.loadMesh(skoomaMeshPath):clone()
     return skoomaMesh
 end
 
 local function attachPipe(ref, pipeObject)
-    Util.log:debug("attachPipe")
-    local skooma = getPipeMesh(pipeObject)
+    logger:debug("attachPipe")
+    local skooma = getPipeMesh(pipeObject) ---@type any
     local attachPath = getMeshPath('attach')
     local node = tes3.loadMesh(attachPath):clone()
     node:attachChild(skooma, true)
@@ -41,7 +42,7 @@ local function attachPipe(ref, pipeObject)
 end
 
 local function detachPipe(ref)
-    Util.log:debug("detachPipe")
+    logger:debug("detachPipe")
     local node = ref.sceneNode:getObjectByName("Bip01 R Hand")
     local attach = node:getObjectByName("Attach Apparatus")
     node:detachChild(attach)
@@ -55,7 +56,7 @@ end
 
 
 local function playSmokingAnimation(meshPath, pipeObject, pipeRef)
-    Util.log:debug("playSmokingAnimation")
+    logger:debug("playSmokingAnimation")
     local ref = tes3.is3rdPerson() and tes3.player or tes3.player1stPerson
     local pipeRefHandle = pipeRef and tes3.makeSafeObjectHandle(pipeRef)
     --unequip any weapon
@@ -109,7 +110,7 @@ function AnimationService.smokeSkooma(e)
     local pipeRef = e.reference
     local pipeObj = e.object or pipeRef and pipeRef.object
 
-    Util.log:debug("smokeSkooma")
+    logger:debug("smokeSkooma")
     local animPath
     if pipeRef then
         animPath = getMeshPath('world')

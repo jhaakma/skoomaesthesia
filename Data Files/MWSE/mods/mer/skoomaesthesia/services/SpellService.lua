@@ -1,5 +1,6 @@
+local common = require("mer.skoomaesthesia.common")
+local logger = common.createLogger("SpellService")
 local SpellService = {}
-local Util = require('mer.skoomaesthesia.util.Util')
 function SpellService.getSpellId(stateId)
     return string.format("mer_sk_%s", string.lower(stateId))
 end
@@ -7,9 +8,15 @@ end
 function SpellService.getSpellForState(state)
     if state.spellEffects then
         local spellId = SpellService.getSpellId(state.id)
-        local spell = tes3.getObject(spellId)
+        local spell = tes3.getObject(spellId) ---@type any
+        ---@cast spell tes3spell
         if not spell then
-            spell = tes3spell.create(spellId, state.name)
+            --spell = tes3spell.create(spellId, state.name)
+            spell = tes3.createObject{
+                objectType = tes3.objectType.spell,
+                castType = tes3.spellType.ability,
+            }
+            ---@cast spell tes3spell
             spell.name = state.name
             spell.castType = tes3.spellType.ability
             for i=1, #state.spellEffects do
@@ -22,10 +29,10 @@ function SpellService.getSpellForState(state)
                 effect.max = newEffect.max or 0
             end
         end
-        Util.log:debug("Returning Spell: %s", spell.id)
+        logger:debug("Returning Spell: %s", spell.id)
         return spell
     else
-        Util.log:debug("Unable to get spell")
+        logger:debug("Unable to get spell")
         return nil
     end
 end

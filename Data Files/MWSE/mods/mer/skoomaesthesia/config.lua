@@ -1,14 +1,19 @@
 local inMemConfig
 
-local this = {}
+local Config = {}
+
+--Interops
+Config.skooma = {}
+Config.moonSugar = {}
+Config.pipes = {}
 
 --Static Config (stored right here)
-this.static = {
+Config.static = {
     modName = "Skoomaesthesia",
     --Description for the MCM sidebar
     modDescription =
 [[
-Overhauls Skooma mechanics. Incudes hallucinations, functional skooma pipes and skooma addiction. 
+Overhauls Skooma mechanics. Incudes hallucinations, functional skooma pipes and skooma addiction.
 
 - Scripting by Merlord
 - Shader by XeroFoxx and Vtastek
@@ -46,8 +51,8 @@ Overhauls Skooma mechanics. Incudes hallucinations, functional skooma pipes and 
 }
 
 --MCM Config (stored as JSON)
-this.configPath = "skoomaesthesia"
-this.mcmDefault = {
+Config.configPath = "skoomaesthesia"
+Config.mcmDefault = {
     enableHallucinations = true,
     enableSkoomaPipe = true,
     enableAddiction = true,
@@ -55,20 +60,20 @@ this.mcmDefault = {
     maxColor = 70,
     maxBlur = 100,
 }
-this.save = function(newConfig)
+Config.save = function(newConfig)
     inMemConfig = newConfig
-    mwse.saveConfig(this.configPath, inMemConfig)
+    mwse.saveConfig(Config.configPath, inMemConfig)
 end
 
-this.mcm = setmetatable({}, {
+Config.mcm = setmetatable({}, {
     __index = function(_, key)
-        inMemConfig = inMemConfig or mwse.loadConfig(this.configPath, this.mcmDefault)
-        return inMemConfig[key]
+        inMemConfig = inMemConfig or mwse.loadConfig(Config.configPath, Config.mcmDefault)
+        return inMemConfig and inMemConfig[key]
     end,
     __newindex = function(_, key, value)
-        inMemConfig = inMemConfig or mwse.loadConfig(this.configPath, this.mcmDefault)
+        inMemConfig = inMemConfig or mwse.loadConfig(Config.configPath, Config.mcmDefault)
         inMemConfig[key] = value
-        mwse.saveConfig(this.configPath, inMemConfig)
+        mwse.saveConfig(Config.configPath, inMemConfig)
     end
 })
 
@@ -80,17 +85,17 @@ local persistentDefault = {
     previousMusicVolume = nil,
 }
 
-this.persistent = setmetatable({}, {
+Config.persistent = setmetatable({}, {
     __index = function(_, key)
         if not tes3.player then return end
-        tes3.player.data[this.configPath] = tes3.player.data[this.configPath] or persistentDefault
-        return tes3.player.data[this.configPath][key]
+        tes3.player.data[Config.configPath] = tes3.player.data[Config.configPath] or persistentDefault
+        return tes3.player.data[Config.configPath][key]
     end,
     __newindex = function(_, key, value)
         if not tes3.player then return end
-        tes3.player.data[this.configPath] = tes3.player.data[this.configPath] or persistentDefault
+        tes3.player.data[Config.configPath] = tes3.player.data[Config.configPath] or persistentDefault
         tes3.player.data.skoomaesthesia[key] = value
     end
 })
 
-return this
+return Config
