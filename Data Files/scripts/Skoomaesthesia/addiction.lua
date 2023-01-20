@@ -13,7 +13,7 @@ local l10n = core.l10n('Skoomaesthesia')
 local function applyWithdrawalChange(active)
     local withdrawalChange = settings:get('withdrawalIntensity')
     if active then
-        withdrawalChange = - withdrawalChange
+        withdrawalChange = -withdrawalChange
     end
     local intelligence = attributes.intelligence(self)
     intelligence.modifier = intelligence.modifier + withdrawalChange
