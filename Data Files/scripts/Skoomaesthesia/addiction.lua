@@ -12,13 +12,16 @@ local l10n = core.l10n('Skoomaesthesia')
 
 local function applyWithdrawalChange(active)
     local withdrawalChange = settings:get('withdrawalIntensity')
-    if active then
+    local attributes = {
+        attributes.intelligence(self),
+        attributes.agility(self),
+    }
+    if not active then
         withdrawalChange = -withdrawalChange
     end
-    local intelligence = attributes.intelligence(self)
-    intelligence.modifier = intelligence.modifier + withdrawalChange
-    local agility = attributes.agility(self)
-    agility.modifier = agility.modifier + withdrawalChange
+    for _, attr in ipairs(attributes) do
+        attr.damage = math.max(0, attr.damage + withdrawalChange)
+    end
 end
 
 local function rescale(value, minIn, maxIn, minOut, maxOut)
