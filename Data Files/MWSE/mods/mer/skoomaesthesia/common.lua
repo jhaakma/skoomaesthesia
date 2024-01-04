@@ -2,7 +2,7 @@ local common = {}
 local config = require("mer.skoomaesthesia.config")
 
 do --Logging
-    ---@type table<string, MWSELogger>
+    ---@type table<string, mwseLogger>
     common.loggers = {}
     local MWSELogger = require("logging.logger")
     function common.createLogger(serviceName)
@@ -12,13 +12,6 @@ do --Logging
         }
         common.loggers[serviceName] = logger
         return logger
-    end
-end
-
-function common.logAssert(logger, condition, message)
-    if not condition then
-        logger:error(message)
-        assert(condition, message)
     end
 end
 
