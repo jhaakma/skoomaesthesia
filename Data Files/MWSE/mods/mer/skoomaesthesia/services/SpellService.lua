@@ -13,6 +13,7 @@ function SpellService.getSpellForState(state)
         if not spell then
             --spell = tes3spell.create(spellId, state.name)
             spell = tes3.createObject{
+                id = spellId,
                 objectType = tes3.objectType.spell,
                 castType = tes3.spellType.ability,
             }
