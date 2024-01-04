@@ -1,0 +1,24 @@
+pageName: Skoomaesthesia
+pageDescription: Adds new skooma mechanics including animated skooma pipe smoking, psychedelic shaders and sound effects, and skooma addiction.
+
+visualsGroupName: Visual Settings
+maxIntensity_name: Color shift power limit
+maxBlur_name: Blur power limit
+
+addictionGroupName: Addiction Settings
+withdrawalIntensity_name: Withdrawal intensity
+withdrawalIntensity_description: The amount by which to reduce affected attributes
+hoursToWithdrawal_name: Hours until withdrawal
+hoursToWithdrawal_description: How long it takes for withdrawal to start after taking a dose
+hoursToRecovery_name: Hours until recovery
+hoursToRecovery_description: How long it takes to recover from addiction after taking a dose
+baseChance_name: Chance to become addicted
+baseChance_description: At 0 resistance
+minResistance_name: Minimal resistance
+minResistance_description: At 0 Willpower
+maxResistance_name: Maximal resistance
+maxResistance_description: At 100 Willpower
+
+message_addicted: You have become addicted to skooma.
+message_withdrawal: You are suffering from skooma withdrawals.
+message_recovery: You are no longer addicted to skooma
